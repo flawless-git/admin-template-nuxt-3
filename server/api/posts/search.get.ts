@@ -7,17 +7,17 @@ export default defineEventHandler(async (event) => {
     const query = getQuery(event);
     const searchQuery = query.q as string;
 
-    console.log("Search query:", searchQuery);
+    // console.log("Search query:", searchQuery);
 
     // First check if we have any posts
     const totalPosts = await prisma.post.count();
-    console.log("Total posts in database:", totalPosts);
+    // console.log("Total posts in database:", totalPosts);
 
     // Check published posts
     const publishedPosts = await prisma.post.count({
       where: { published: true },
     });
-    console.log("Published posts:", publishedPosts);
+    // console.log("Published posts:", publishedPosts);
 
     // Return empty results for empty/short queries
     if (!searchQuery?.trim()) {
@@ -65,7 +65,7 @@ export default defineEventHandler(async (event) => {
       take: 5,
     });
 
-    console.log("Found posts:", posts.length);
+    // console.log("Found posts:", posts.length);
 
     return {
       query: searchQuery,

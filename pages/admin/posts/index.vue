@@ -1,7 +1,15 @@
 <script setup lang="ts">
+import { computed, ref, onMounted } from "vue";
 import { useToast } from "@/components/ui/AppToast/use-toast";
-import { Pencil, Trash2, Plus, MoreHorizontal } from "lucide-vue-next";
+import {
+  Pencil,
+  Trash2,
+  Plus,
+  MoreHorizontal,
+  ArrowUpDown,
+} from "lucide-vue-next";
 import type { Post } from "@/types/data";
+import { useAuthStore } from "@/stores/auth";
 
 definePageMeta({
   layout: "admin",
@@ -11,6 +19,7 @@ definePageMeta({
 const router = useRouter();
 const { toast } = useToast();
 const isLoading = ref(false);
+const authStore = useAuthStore();
 
 // Update ref with type
 const posts = ref<Post[]>([]);
@@ -20,7 +29,11 @@ const fetchPosts = async () => {
   try {
     isLoading.value = true;
     const data = await $fetch("/api/posts");
-    posts.value = data;
+    if (authStore.user?.role === "ADMIN") {
+      posts.value = data;
+    } else {
+      posts.value = data.filter((post) => post.authorId === authStore.user?.id);
+    }
   } catch (error: any) {
     toast({
       variant: "destructive",
@@ -60,6 +73,76 @@ const handleEdit = (id: number) => {
   router.push(`/admin/posts/${id}/edit`);
 };
 
+// Sort posts
+const sortField = ref<keyof Post | null>(null);
+const sortDirection = ref<"asc" | "desc" | null>(null);
+
+const sortedData = computed(() => {
+  let sorted = [...posts.value];
+  const currentSortField = sortField.value;
+  const currentSortDirection = sortDirection.value;
+
+  if (currentSortField && currentSortDirection) {
+    sorted.sort((a, b) => {
+      const aValue = a[currentSortField];
+      const bValue = b[currentSortField];
+
+      // Perbaikan typo pada kondisi
+      if (aValue === null || aValue === undefined) return 1;
+      if (bValue === null || bValue === undefined) return -1;
+
+      // Handle perbandingan tanggal
+      if (currentSortField === "createdAt") {
+        // Tambahkan type assertion untuk Date
+        const dateA = new Date(aValue as string);
+        const dateB = new Date(bValue as string);
+        return currentSortDirection === "asc"
+          ? dateA.getTime() - dateB.getTime()
+          : dateB.getTime() - dateA.getTime();
+      }
+
+      // Handle boolean untuk status published
+      if (typeof aValue === "boolean" && typeof bValue === "boolean") {
+        return currentSortDirection === "asc"
+          ? aValue === bValue
+            ? 0
+            : aValue
+            ? -1
+            : 1
+          : aValue === bValue
+          ? 0
+          : aValue
+          ? 1
+          : -1;
+      }
+
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        return currentSortDirection === "asc"
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+
+      if (typeof aValue === "number" && typeof bValue === "number") {
+        return currentSortDirection === "asc"
+          ? aValue - bValue
+          : bValue - aValue;
+      }
+
+      return 0;
+    });
+  }
+  return sorted;
+});
+
+const handleSort = (field: keyof Post) => {
+  if (sortField.value === field) {
+    sortDirection.value = sortDirection.value === "asc" ? "desc" : "asc";
+  } else {
+    sortField.value = field;
+    sortDirection.value = "asc";
+  }
+};
+
 onMounted(fetchPosts);
 </script>
 
@@ -87,15 +170,51 @@ onMounted(fetchPosts);
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Title</TableHead>
+              <TableHead>
+                <Button
+                  variant="ghost"
+                  @click="handleSort('title')"
+                  :class="sortField === 'title' ? 'bg-muted' : ''"
+                >
+                  Title
+                  <ArrowUpDown class="ml-2 h-4 w-4" />
+                  <span v-if="sortField === 'title'" class="ml-1">
+                    {{ sortDirection === "asc" ? "↑" : "↓" }}
+                  </span>
+                </Button>
+              </TableHead>
               <TableHead>Author</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created At</TableHead>
+              <TableHead>
+                <Button
+                  variant="ghost"
+                  @click="handleSort('published')"
+                  :class="sortField === 'published' ? 'bg-muted' : ''"
+                >
+                  Status
+                  <ArrowUpDown class="ml-2 h-4 w-4" />
+                  <span v-if="sortField === 'published'" class="ml-1">
+                    {{ sortDirection === "asc" ? "↑" : "↓" }}
+                  </span>
+                </Button>
+              </TableHead>
+              <TableHead>
+                <Button
+                  variant="ghost"
+                  @click="handleSort('createdAt')"
+                  :class="sortField === 'createdAt' ? 'bg-muted' : ''"
+                >
+                  Created At
+                  <ArrowUpDown class="ml-2 h-4 w-4" />
+                  <span v-if="sortField === 'createdAt'" class="ml-1">
+                    {{ sortDirection === "asc" ? "↑" : "↓" }}
+                  </span>
+                </Button>
+              </TableHead>
               <TableHead class="w-[100px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            <TableRow v-for="post in posts" :key="post.id">
+            <TableRow v-for="post in sortedData" :key="post.id">
               <TableCell>{{ post.title }}</TableCell>
               <TableCell>{{ post.author.username }}</TableCell>
               <TableCell>

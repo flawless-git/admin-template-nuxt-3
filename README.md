@@ -7,19 +7,22 @@ A modern database management system built with Nuxt 3, Vue 3, and Shadcn Vue.
 - 🔐 Authentication & Authorization
 - 👥 User Management
 - 📝 Post Management
-- 🎨 Theme Switching
+- 🎨 Theme Switching (Light/Dark)
 - 🔍 Global Search
 - 📱 Responsive Design
+- 🔒 Protected Routes (/admin)
+- 🎯 Form Validation
+- 💾 Data Persistence
 
 ## Tech Stack
 
-- **Framework:** Nuxt 3
-- **UI Components:** Shadcn Vue
-- **Styling:** Tailwind CSS
-- **State Management:** Pinia
-- **Database:** Prisma
-- **Form Validation:** Vee Validate + Zod
-- **Icons:** Lucide Icons
+- **Framework:** [Nuxt 3](https://nuxt.com)
+- **UI Components:** [Shadcn Vue](https://www.shadcn-vue.com/)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com)
+- **State Management:** [Pinia](https://pinia.vuejs.org)
+- **Database:** [Prisma](https://www.prisma.io/)
+- **Form Validation:** [Vee Validate](https://vee-validate.logaretm.com/v4/) + [Zod](https://zod.dev)
+- **Icons:** [Lucide Icons](https://lucide.dev)
 
 ## Project Structure
 

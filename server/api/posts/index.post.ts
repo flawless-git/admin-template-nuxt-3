@@ -81,7 +81,6 @@ export default defineEventHandler(async (event) => {
       message: error.message || "Failed to create post",
     });
   } finally {
-    // Ensure connection is properly handled
     await prisma.$disconnect();
   }
 });

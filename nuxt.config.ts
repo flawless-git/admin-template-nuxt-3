@@ -20,6 +20,7 @@ export default defineNuxtConfig({
     "@pinia/nuxt",
     "pinia-plugin-persistedstate/nuxt",
     "@nuxt/image",
+    "nuxt-file-storage",
   ],
   // Global CSS file
   css: ["@/assets/styles/global.css"],

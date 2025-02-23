@@ -5,13 +5,14 @@ import { z } from "zod";
 import { useField, useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useAuth } from "@/composables/useAuth";
+import { useAuthStore } from "@/stores/auth";
 import type { User } from "@/types/data";
 
 const router = useRouter();
 const { toast } = useToast();
 const { token, user } = useAuth();
 const isLoading = ref(false);
-
+const authStore = useAuthStore();
 // Fetch users for author selection
 const { data: users } = await useFetch<User[]>("/api/users");
 
@@ -134,15 +135,11 @@ definePageMeta({
             <Label for="author">Author</Label>
             <Select v-model="authorId">
               <SelectTrigger>
-                <SelectValue placeholder="Select an author" />
+                <SelectValue :placeholder="authStore.user?.username" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  v-for="user in users"
-                  :key="user.id"
-                  :value="user.id"
-                >
-                  {{ user.username }}
+                <SelectItem :value="authStore.user?.id as string">
+                  {{ authStore.user?.username }}
                 </SelectItem>
               </SelectContent>
             </Select>

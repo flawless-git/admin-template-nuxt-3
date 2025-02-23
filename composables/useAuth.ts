@@ -23,6 +23,11 @@ export const useAuth = () => {
   const logout = async () => {
     await store.logout();
     await router.push("/login");
+    toast.toast({
+      variant: "default",
+      title: "Success",
+      description: "Logout berhasil",
+    });
   };
 
   return {

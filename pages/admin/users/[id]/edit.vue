@@ -6,6 +6,7 @@ import { z } from "zod";
 import { useForm, useField } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
 import { ArrowLeft } from "lucide-vue-next";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 definePageMeta({
   layout: "admin",
@@ -16,6 +17,9 @@ const route = useRoute();
 const router = useRouter();
 const { toast } = useToast();
 const isLoading = ref(false);
+const fileInput = ref<HTMLInputElement | null>(null);
+const previewUrl = ref<string | null>(null);
+const avatarFile = ref<File | null>(null);
 
 // Fetch current user data
 const { data: user } = await useFetch<User>(`/api/users/${route.params.id}`);
@@ -75,9 +79,29 @@ const { value: password, errorMessage: passwordError } =
 
 const { value: role, errorMessage: roleError } = useField<Role>("role");
 
+const handleFileInput = (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: "File size must be less than 2MB",
+        variant: "destructive",
+      });
+      return;
+    }
+    avatarFile.value = file;
+    previewUrl.value = URL.createObjectURL(file);
+  }
+};
+
 const onSubmit = handleSubmit(async (values) => {
   try {
     isLoading.value = true;
+    await $fetch<any>(`/api/users/avatar/${route.params.id}`, {
+      method: "DELETE",
+    });
     await $fetch(`/api/users/${route.params.id}`, {
       method: "PUT",
       body: {
@@ -88,6 +112,17 @@ const onSubmit = handleSubmit(async (values) => {
       },
     });
 
+    if (avatarFile.value) {
+      const formData = new FormData();
+      formData.append("avatar", avatarFile.value);
+      const uploadResponse = await $fetch<{ user: { avatar: string } }>(
+        `/api/users/avatar/${route.params.id}`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+    }
     toast({
       title: "Success",
       description: "User berhasil diupdate",
@@ -106,6 +141,23 @@ const onSubmit = handleSubmit(async (values) => {
   } finally {
     isLoading.value = false;
   }
+});
+
+// Computed for avatar source
+const avatarSrc = computed(() => {
+  if (previewUrl.value) return previewUrl.value;
+  if (user.value?.avatar) return `/${user.value.avatar.replace(/^\//, "")}`;
+  return null;
+});
+
+// For debugging purposes
+console.log("Editing user:", {
+  id: route.params.id,
+  username: username.value,
+  email: email.value,
+  role: role.value,
+  avatar: user.value?.avatar,
+  hasNewAvatar: !!avatarFile.value,
 });
 </script>
 
@@ -131,6 +183,25 @@ const onSubmit = handleSubmit(async (values) => {
       </CardHeader>
       <CardContent>
         <form @submit.prevent="onSubmit" class="space-y-4">
+          <!-- Avatar Upload -->
+          <div class="space-y-2">
+            <Label>Avatar</Label>
+            <div class="flex items-center gap-4">
+              <Avatar class="w-24 h-24">
+                <AvatarImage :src="avatarSrc as string" :alt="user?.username" />
+                <AvatarFallback>
+                  {{ user?.username?.charAt(0).toUpperCase() }}
+                </AvatarFallback>
+              </Avatar>
+              <Input
+                ref="fileInput"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                @input="handleFileInput"
+              />
+            </div>
+          </div>
+
           <div class="space-y-2">
             <Label for="username">Username</Label>
             <Input id="username" v-model="username" placeholder="johndoe" />

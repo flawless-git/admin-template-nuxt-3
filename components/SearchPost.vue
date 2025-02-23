@@ -2,7 +2,6 @@
 import { ref, onMounted, onUnmounted } from "vue";
 import { SearchIcon, Loader2 } from "lucide-vue-next";
 import type { Post } from "@/types/data";
-import { DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useSearch } from "@/composables/useSearch";
 
 // Get search functionality from composable

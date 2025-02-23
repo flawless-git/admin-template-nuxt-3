@@ -4,9 +4,10 @@ export type User = {
   id: string;
   email: string;
   username: string;
-  role: Role;
-  createdAt: string | Date;
-  updatedAt: string | Date;
+  role: "ADMIN" | "USER";
+  avatar?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
   password?: string;
 };
 

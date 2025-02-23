@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   LineChart,
 } from "lucide-vue-next";
+import type { User } from "~/types/data";
 
 const route = useRoute();
 const { user, logout, isAdmin } = useAuth();
@@ -137,6 +138,10 @@ const postLinks = [{ to: "/admin/posts", label: "All Posts", icon: FileText }];
     <div class="p-4 border-t">
       <div v-if="!isCollapsed" class="flex items-center gap-3 mb-3">
         <Avatar>
+          <AvatarImage
+            :src="user?.avatar ? `/${user.avatar.replace(/^\//, '')}` : ''"
+            :alt="user?.username || 'User avatar'"
+          />
           <AvatarFallback>
             {{ user?.username?.charAt(0).toUpperCase() }}
           </AvatarFallback>

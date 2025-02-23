@@ -5,6 +5,7 @@ import { useField, useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
 import { Role } from "@prisma/client";
 import { ArrowLeft, UserPlus } from "lucide-vue-next";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 definePageMeta({
   layout: "admin",
@@ -13,6 +14,9 @@ definePageMeta({
 
 const router = useRouter();
 const { toast } = useToast();
+const fileInput = ref<HTMLInputElement | null>(null);
+const previewUrl = ref<string | null>(null);
+const avatarFile = ref<File | null>(null);
 
 // Form validation schema
 const validationSchema = toTypedSchema(
@@ -58,18 +62,31 @@ const { value: role, errorMessage: roleError } = useField<Role>(
 
 const isLoading = ref(false);
 
+const handleFileInput = (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+
+    // Validate file size (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: "File size must be less than 2MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    avatarFile.value = file;
+    previewUrl.value = URL.createObjectURL(file);
+  }
+};
+
 const onSubmit = handleSubmit(async (values) => {
   try {
     isLoading.value = true;
 
-    // Log the values being sent
-    console.log("Submitting values:", {
-      username: values.username.trim(),
-      email: values.email.toLowerCase().trim(),
-      password: values.password,
-      role: values.role,
-    });
-
+    // Create user first
     const response = await $fetch("/api/users", {
       method: "POST",
       body: {
@@ -80,7 +97,18 @@ const onSubmit = handleSubmit(async (values) => {
       },
     });
 
-    console.log("Create response:", response);
+    // Upload avatar if selected
+    if (avatarFile.value) {
+      const formData = new FormData();
+      formData.append("avatar", avatarFile.value);
+      const uploadResponse = await $fetch<{ user: { avatar: string } }>(
+        `/api/users/avatar/${response.id}`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+    }
 
     toast({
       title: "Success",
@@ -106,27 +134,38 @@ const onSubmit = handleSubmit(async (values) => {
 </script>
 
 <template>
-  <div>
-    <div class="flex justify-between items-center mb-8">
-      <div>
-        <h1 class="text-3xl font-bold">Create User</h1>
-        <p class="text-muted-foreground">Add a new user to the system</p>
-      </div>
-      <NuxtLink to="/admin/users">
-        <Button variant="outline">
-          <ArrowLeft class="w-4 h-4 mr-2" />
-          Back to Users
-        </Button>
-      </NuxtLink>
-    </div>
-
+  <div class="container mx-auto py-8">
     <Card>
       <CardHeader>
-        <CardTitle>User Information</CardTitle>
-        <CardDescription>Enter the details for the new user</CardDescription>
+        <div class="flex items-center justify-between">
+          <div>
+            <CardTitle>Create User</CardTitle>
+            <CardDescription>Add a new user to the system</CardDescription>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <form @submit.prevent="onSubmit" class="space-y-4">
+          <!-- Avatar Upload -->
+          <div class="space-y-2">
+            <Label>Avatar</Label>
+            <div class="flex items-center gap-4">
+              <Avatar class="w-24 h-24">
+                <AvatarImage :src="previewUrl || ''" />
+                <AvatarFallback>
+                  {{ username?.charAt(0).toUpperCase() || "U" }}
+                </AvatarFallback>
+              </Avatar>
+              <Input
+                ref="fileInput"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                @input="handleFileInput"
+              />
+            </div>
+          </div>
+
+          <!-- Username field -->
           <div class="space-y-2">
             <Label for="username">Username</Label>
             <Input id="username" v-model="username" placeholder="johndoe" />

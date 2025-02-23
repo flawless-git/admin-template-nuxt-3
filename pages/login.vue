@@ -4,6 +4,7 @@ import { z } from "zod";
 import { useToast } from "~/components/ui/AppToast/use-toast";
 import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
+import { onMounted } from "vue";
 
 const router = useRouter();
 const { login } = useAuth();
@@ -74,6 +75,13 @@ const onSubmit = handleSubmit(async (values) => {
     });
   } finally {
     isLoading.value = false;
+  }
+});
+
+onMounted(() => {
+  const authStore = useAuthStore();
+  if (authStore.isAuthenticated) {
+    router.push("/admin");
   }
 });
 </script>

@@ -1,12 +1,12 @@
 import { useAuthStore } from "@/stores/auth";
 
-export default defineNuxtRouteMiddleware(async (to) => {
+export default defineNuxtRouteMiddleware(async (to, from) => {
   const authStore = useAuthStore();
 
   // Skip middleware for public routes
-  if (to.path === "/" || to.path === "/login") {
-    return;
-  }
+  // if (to.path === "/" || to.path === "/login") {
+  //   return;
+  // }
 
   // Try to restore session if we have a token
   if (!authStore.isAuthenticated && authStore.token) {

@@ -50,6 +50,7 @@
     "@types/bcrypt": "^5.0.2",
     "@types/pg": "^8.11.11",
     "drizzle-kit": "^0.30.4",
+    "nuxt-file-storage": "^0.2.9",
     "shadcn-nuxt": "^0.11.3",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.3",
