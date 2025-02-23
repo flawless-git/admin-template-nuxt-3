@@ -56,6 +56,11 @@ GET     /api/users/:id         # Get user by ID
 PUT     /api/users/:id         # Update user
 DELETE  /api/users/:id         # Delete user
 
+# User Avatar Routes
+POST    /api/users/avatar/:userId    # Upload user avatar
+DELETE  /api/users/avatar/:userId    # Delete user avatar
+GET     /api/users/avatar/:userId    # Get user avatar
+
 # Post Routes
 GET     /api/posts             # Get all posts
 POST    /api/posts             # Create post
